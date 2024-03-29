@@ -2,6 +2,7 @@ resource "google_storage_bucket" "document_store" {
     name          = "document-store-cloudragmini2024"
     location      = "us-central1"
     storage_class = "STANDARD"
+    depends_on = [ google_project_service.storage_api ]
 }
 
 resource "google_vertex_ai_index" "vector_index" {
@@ -23,4 +24,5 @@ resource "google_vertex_ai_index" "vector_index" {
     }
   }
   index_update_method = "BATCH_UPDATE"
+  depends_on = [ google_project_service.vector_index_api ]
 }
