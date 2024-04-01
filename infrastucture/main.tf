@@ -14,7 +14,7 @@ module "database" {
   database_name          = "historycloudragmini2024"
   database_instance      = "db-f1-micro"
   database_user_name     = "rag_user"
-  database_user_password = "1234567"
+  database_user_password = var.database_password
   depends_on             = [module.gcp_apis]
 }
 
@@ -42,7 +42,11 @@ module "rag_api" {
     "VECTOR_INDEX_ID"     = module.vector_index.vector_index_id,
     "ENDPOINT_ID"         = module.vector_index.vector_index_endpoint_id,
   }
-  depends_on = [module.gcp_apis, module.database, module.vector_index]
+  depends_on = [
+    module.gcp_apis,
+    module.database,
+    module.vector_index
+  ]
 }
 
 module "rag_app" {
@@ -54,5 +58,8 @@ module "rag_app" {
   environment = {
     "API_URL" = module.rag_api.url
   }
-  depends_on = [module.rag_api, module.gcp_apis]
+  depends_on = [
+    module.rag_api,
+    module.gcp_apis
+  ]
 }
