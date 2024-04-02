@@ -31,4 +31,5 @@ output "user" {
 output "password" {
   description = "Password of database user"
   value       = google_sql_user.rag_user.password
+  sensitive   = true
 }
