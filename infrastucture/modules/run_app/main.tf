@@ -12,6 +12,9 @@ resource "google_cloud_run_service" "app" {
           tcp_socket {
             port = var.port
           }
+          timeout_seconds = 10
+          period_seconds = 10
+          failure_threshold = 10
         }
         dynamic "env" {
           for_each = var.environment

@@ -20,12 +20,12 @@ output "vector_index_region" {
 
 output "vector_index_id" {
   description = "ID of vector index"
-  value       = google_vertex_ai_index.vector_index.id
+  value       = google_vertex_ai_index.vector_index.name
 }
 
 output "vector_index_endpoint_id" {
   description = "ID of vector index endpoint"
-  value       = var.bucket_name
+  value       = google_vertex_ai_index_endpoint.vector_index_endpoint.name
 }
 
 output "bucket_name" {
