@@ -13,6 +13,11 @@ resource "google_project_service" "vector_index_api" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "google_plus_api" {
+  service            = "plus.googleapis.com"
+  disable_on_destroy = false
+}
+
 resource "google_project_service" "storage_api" {
   service            = "storage.googleapis.com"
   disable_on_destroy = false
