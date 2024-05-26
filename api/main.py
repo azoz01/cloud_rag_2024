@@ -79,8 +79,9 @@ async def get_response(message: ClientMessage, credentials=Security(verify_token
     start = time.time_ns()
     query = user_history.insert().values(username=credentials["user_info"]["email"], prompt=message.text)
     await database.execute(query)
-    response_time = time.time_ns() - start
-    response = RagMessage(text=(await rag_service.get_response(message.text)), response_time=response_time)
+    response = await rag_service.get_response(message.text)
+    response_time = (time.time_ns() - start) // 1_000_000
+    rag_message = RagMessage(text=response, response_time=response_time)
     select_query = (
         user_history
         .select()
@@ -98,13 +99,13 @@ async def get_response(message: ClientMessage, credentials=Security(verify_token
         user_history.update()
         .where(user_history.c.id == record["id"])
         .values(
-            response=response.text,
-            response_time=response.response_time
+            response=rag_message.text,
+            response_time=rag_message.response_time
         )
     )
 
     await database.execute(update_query)
-    return response
+    return rag_message
 
 
 @app.delete("/chatbot/message/{message_id}/delete")
