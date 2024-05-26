@@ -85,7 +85,7 @@ async def get_response(message: ClientMessage, credentials=Security(verify_token
         user_history
         .select()
         .where(user_history.c.username == credentials["user_info"]["email"])
-        .order_by(sql.desc(user_history.c.timestamp))
+        .order_by(sql.desc(user_history.c.id))
         .limit(1)
     )
 
@@ -109,14 +109,14 @@ async def get_response(message: ClientMessage, credentials=Security(verify_token
 
 @app.delete("/chatbot/message/{message_id}/delete")
 async def delete_message(message_id, credentials=Security(verify_token)):
-    query = user_history.select().where(user_history.c.id == message_id)
+    query = user_history.select().where(user_history.c.id == int(message_id))
     record = await database.fetch_one(query)
 
     if record is None:
         raise HTTPException(status_code=404, detail="Record not found")
 
     # Delete the record
-    delete_query = user_history.delete().where(user_history.c.id == id)
+    delete_query = user_history.delete().where(user_history.c.id == int(message_id))
     await database.execute(delete_query)
 
     return {"message": "Record deleted successfully"}
