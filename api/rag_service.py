@@ -41,8 +41,8 @@ class RagService:
             input_key="question",
         )
 
-    def get_response(self, prompt):
-        result = self.qa_chain(
+    async def get_response(self, prompt):
+        result = await self.qa_chain.ainvoke(
             {
                 "question": f"{prompt}. If this is not present in "
                 "documents, say 'I don't know'",
