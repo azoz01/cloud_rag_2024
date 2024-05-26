@@ -8,9 +8,10 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import sqlalchemy as sql
 from contextlib import asynccontextmanager
+import time
 
 from rag_service import RagService
-from models import Message
+from models import ClientMessage, RagMessage
 from database import database, user_history
 from security import verify_token
 
@@ -39,7 +40,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 
 @app.get("/info")
@@ -75,12 +75,15 @@ async def get_user_info(credentials=Security(verify_token)):
 
 # chatbot endpoints
 @app.post("/chatbot/message/new")
-async def get_response(message: Message, credentials=Security(verify_token)):
-    query = user_history.insert().values(username=credentials["user_info"]["email"], timestamp=message.timestamp, prompt=message.text)
+async def get_response(message: ClientMessage, credentials=Security(verify_token)):
+    start = time.time_ns()
+    query = user_history.insert().values(username=credentials["user_info"]["email"], prompt=message.text)
     await database.execute(query)
-    response = Message(originator="rag", timestamp=datetime.now(), text=(await rag_service.get_response(message.text)))
+    response_time = time.time_ns() - start
+    response = RagMessage(text=(await rag_service.get_response(message.text)), response_time=response_time)
     select_query = (
-        sql.select([user_history])
+        user_history
+        .select()
         .where(user_history.c.username == credentials["user_info"]["email"])
         .order_by(sql.desc(user_history.c.timestamp))
         .limit(1)
@@ -96,7 +99,7 @@ async def get_response(message: Message, credentials=Security(verify_token)):
         .where(user_history.c.id == record["id"])
         .values(
             response=response.text,
-            response_timestamp=datetime.now()
+            response_time=response.response_time
         )
     )
 
