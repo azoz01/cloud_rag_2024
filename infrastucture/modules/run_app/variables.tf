@@ -22,6 +22,7 @@ variable "port" {
 variable "environment" {
   description = "Map of environment variables"
   type        = map(string)
+  sensitive   = true
 }
 
 output "url" {

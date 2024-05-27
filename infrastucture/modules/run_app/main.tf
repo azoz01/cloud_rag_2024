@@ -17,7 +17,7 @@ resource "google_cloud_run_service" "app" {
           failure_threshold = 10
         }
         dynamic "env" {
-          for_each = var.environment
+          for_each = nonsensitive(var.environment)
           content {
             name  = env.key
             value = env.value

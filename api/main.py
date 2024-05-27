@@ -1,20 +1,19 @@
-from datetime import datetime
 import os
+import time
+from contextlib import asynccontextmanager
+from datetime import datetime
+
+import requests
+import sqlalchemy as sql
+import uvicorn
+from database import database, user_history
 from fastapi import FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-import requests
-from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-import sqlalchemy as sql
-from contextlib import asynccontextmanager
-import time
-
-from rag_service import RagService
+from google.oauth2 import id_token
 from models import ClientMessage, RagMessage
-from database import database, user_history
-from security import verify_token
-
+from rag_service import RagService
+from security import get_google_redirect_uri, verify_token
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "key.json"
 
@@ -64,7 +63,6 @@ async def env(credentials=Security(verify_token)):
         "ENDPOINT_ID": os.environ["ENDPOINT_ID"],
         "GOOGLE_CLIENT_ID": os.environ["GOOGLE_CLIENT_ID"],
         "GOOGLE_CLIENT_SECRET": os.environ["GOOGLE_CLIENT_SECRET"],
-        "GOOGLE_REDIRECT_URI": os.environ["GOOGLE_REDIRECT_URI"]
     }
 
 
@@ -75,16 +73,19 @@ async def get_user_info(credentials=Security(verify_token)):
 
 # chatbot endpoints
 @app.post("/chatbot/message/new")
-async def get_response(message: ClientMessage, credentials=Security(verify_token)):
+async def get_response(
+    message: ClientMessage, credentials=Security(verify_token)
+):
     start = time.time_ns()
-    query = user_history.insert().values(username=credentials["user_info"]["email"], prompt=message.text)
+    query = user_history.insert().values(
+        username=credentials["user_info"]["email"], prompt=message.text
+    )
     await database.execute(query)
     response = await rag_service.get_response(message.text)
     response_time = (time.time_ns() - start) // 1_000_000
     rag_message = RagMessage(text=response, response_time=response_time)
     select_query = (
-        user_history
-        .select()
+        user_history.select()
         .where(user_history.c.username == credentials["user_info"]["email"])
         .order_by(sql.desc(user_history.c.id))
         .limit(1)
@@ -99,8 +100,7 @@ async def get_response(message: ClientMessage, credentials=Security(verify_token
         user_history.update()
         .where(user_history.c.id == record["id"])
         .values(
-            response=rag_message.text,
-            response_time=rag_message.response_time
+            response=rag_message.text, response_time=rag_message.response_time
         )
     )
 
@@ -117,7 +117,9 @@ async def delete_message(message_id, credentials=Security(verify_token)):
         raise HTTPException(status_code=404, detail="Record not found")
 
     # Delete the record
-    delete_query = user_history.delete().where(user_history.c.id == int(message_id))
+    delete_query = user_history.delete().where(
+        user_history.c.id == int(message_id)
+    )
     await database.execute(delete_query)
 
     return {"message": "Record deleted successfully"}
@@ -125,9 +127,8 @@ async def delete_message(message_id, credentials=Security(verify_token)):
 
 @app.get("/chatbot/message/fetchAll")
 async def get_all_messages(credentials=Security(verify_token)):
-    query = (
-        user_history.select()
-        .where(user_history.c.username == credentials["user_info"]["email"])
+    query = user_history.select().where(
+        user_history.c.username == credentials["user_info"]["email"]
     )
 
     results = await database.fetch_all(query)
@@ -142,7 +143,7 @@ async def get_all_messages(credentials=Security(verify_token)):
 @app.get("/login")
 async def login():
     return {
-        "url": f"https://accounts.google.com/o/oauth2/auth?response_type=code&client_id={os.environ['GOOGLE_CLIENT_ID']}&redirect_uri={os.environ['GOOGLE_REDIRECT_URI']}&scope=openid%20profile%20email&access_type=offline"
+        "url": f"https://accounts.google.com/o/oauth2/auth?response_type=code&client_id={os.environ['GOOGLE_CLIENT_ID']}&redirect_uri={get_google_redirect_uri()}&scope=openid%20profile%20email&access_type=offline"
     }
 
 
@@ -153,16 +154,23 @@ async def auth(code):
         "code": code,
         "client_id": os.environ["GOOGLE_CLIENT_ID"],
         "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
-        "redirect_uri": os.environ["GOOGLE_REDIRECT_URI"],
+        "redirect_uri": get_google_redirect_uri(),
         "grant_type": "authorization_code",
     }
     response = requests.post(token_url, data=data)
     token_json = response.json()
 
-    if 'error' in token_json:
-        raise HTTPException(status_code=400, detail=f"Error in token request: {token_json['error']}")
+    if "error" in token_json:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error in token request: {token_json['error']}",
+        )
 
-    id_info = id_token.verify_oauth2_token(token_json['id_token'], google_requests.Request(), os.environ["GOOGLE_CLIENT_ID"])
+    id_info = id_token.verify_oauth2_token(
+        token_json["id_token"],
+        google_requests.Request(),
+        os.environ["GOOGLE_CLIENT_ID"],
+    )
     return {"id_info": id_info, "token_json": token_json}
 
 

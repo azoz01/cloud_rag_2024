@@ -14,7 +14,7 @@ module "database" {
   database_name          = "historycloudragmini2024"
   database_instance      = "db-f1-micro"
   database_user_name     = "rag_user"
-  database_user_password = var.database_password
+  database_user_password = var.DATABASE_PASSWORD
   depends_on             = [module.gcp_apis]
 }
 
@@ -30,17 +30,20 @@ module "rag_api" {
   source           = "./modules/run_app"
   application_name = "ragapi"
   location         = "us-central1"
-  docker_img       = "docker.io/azoz01/rag_api:0.0.8"
+  docker_img       = "docker.io/azoz01/rag_api:0.0.20"
   port             = 8000
   environment = {
-    "DATABASE_IP"         = module.database.database_ip,
-    "DATABASE_USER"       = module.database.user,
-    "DATABASE_PASSWORD"   = module.database.password,
-    "PROJECT_ID"          = "cloudragmini20242",
-    "VECTOR_INDEX_REGION" = module.vector_index.vector_index_region,
-    "VECTOR_INDEX_BUCKET" = module.vector_index.bucket_name,
-    "VECTOR_INDEX_ID"     = module.vector_index.vector_index_id,
-    "ENDPOINT_ID"         = module.vector_index.vector_index_endpoint_id,
+    "DATABASE_IP"           = module.database.database_ip,
+    "DATABASE_USER"         = module.database.user,
+    "DATABASE_PASSWORD"     = module.database.password,
+    "PROJECT_ID"            = "cloudragmini20242",
+    "VECTOR_INDEX_REGION"   = module.vector_index.vector_index_region,
+    "VECTOR_INDEX_BUCKET"   = module.vector_index.bucket_name,
+    "VECTOR_INDEX_ID"       = module.vector_index.vector_index_id,
+    "ENDPOINT_ID"           = module.vector_index.vector_index_endpoint_id
+    "GOOGLE_CLIENT_ID"      = var.GOOGLE_CLIENT_ID,
+    "GOOGLE_CLIENT_SECRET"  = var.GOOGLE_CLIENT_SECRET,
+    "TOKEN_URL"             = var.TOKEN_URL,
   }
   depends_on = [
     module.gcp_apis,
