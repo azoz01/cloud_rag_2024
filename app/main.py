@@ -77,11 +77,7 @@ def _setup_layout():
         )
 
         if not st.session_state.is_logged:
-            st.button(
-                "Login with Google",
-                key="google-log",
-                on_click=_redirect_to_google,
-            )
+            _get_google_redirect_button()
 
         if st.session_state.TOKEN is not None:
             st.button(
@@ -102,7 +98,7 @@ def _sign_out():
     raise NotImplementedError
 
 
-def _redirect_to_google():
+def _get_google_redirect_button():
 
     directory = "/login"
 
@@ -111,7 +107,11 @@ def _redirect_to_google():
     )
 
     authorization_url = response.json()["url"]
-    webbrowser.open(authorization_url)
+    button_html = f"""
+    <a href="{authorization_url}"/>Log with Google<a/>
+    """
+
+    return st.markdown(button_html, unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -174,6 +174,10 @@ def _add_to_history(prompt: str, response: str, username: str, id_: int):
             )
 
     history_containers[id_] = new_container
+
+    if isinstance(st.session_state.history, dict):
+        return
+
     st.session_state.history.append(
         {"prompt": prompt, "response": response, "id": id_}
     )
