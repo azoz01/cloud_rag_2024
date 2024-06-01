@@ -4,7 +4,11 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
-COPY . .
+RUN mkdir code
+
+COPY . code/
+
+WORKDIR code
 
 EXPOSE 8001:8001
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
