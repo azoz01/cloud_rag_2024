@@ -7,15 +7,7 @@ from google.oauth2 import id_token
 
 
 def get_google_redirect_uri():
-    out = os.popen(
-        "./google-cloud-sdk/bin/gcloud run services describe ragapi "
-        "--format='value(status.url)' --platform managed "
-        "--project cloudragmini20242 --region=us-central1"
-    )
-    uri = next(iter(out))
-    print(uri)
-    uri = uri[:-1] + "/auth"
-    return uri
+    return "https://ragapp-hw2k5v4d7q-uc.a.run.app"
 
 
 auth_scheme = OAuth2AuthorizationCodeBearer(

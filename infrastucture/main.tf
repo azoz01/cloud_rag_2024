@@ -30,7 +30,7 @@ module "rag_api" {
   source           = "./modules/run_app"
   application_name = "ragapi"
   location         = "us-central1"
-  docker_img       = "docker.io/azoz01/rag_api:0.0.20"
+  docker_img       = "docker.io/azoz01/rag_api:0.0.25"
   port             = 8000
   environment = {
     "DATABASE_IP"           = module.database.database_ip,
@@ -56,7 +56,7 @@ module "rag_app" {
   source           = "./modules/run_app"
   application_name = "ragapp"
   location         = "us-central1"
-  docker_img       = "docker.io/azoz01/rag_app:0.0.4"
+  docker_img       = "docker.io/azoz01/rag_app:0.0.9"
   port             = 8001
   environment = {
     "API_URL" = module.rag_api.url

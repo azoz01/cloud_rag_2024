@@ -1,4 +1,5 @@
 import json
+import os
 import time
 import webbrowser
 from copy import deepcopy
@@ -6,9 +7,6 @@ from functools import partial
 
 import requests
 import streamlit as st
-
-site = "https://ragapi-hw2k5v4d7q-uc.a.run.app"
-
 
 st.set_page_config(page_title="RAG chat")
 
@@ -20,7 +18,7 @@ def get_response(message: str, token) -> str:
     directory: str = "/chatbot/message/new"
 
     response = requests.post(
-        site + directory,
+        os.environ["API_URL"] + directory,
         data=str(json.dumps({"text": message})),
         headers={
             "accept": "application/json",
@@ -37,7 +35,7 @@ def _get_user_history(token):
 
     directory = "/chatbot/message/fetchAll"
     response = requests.get(
-        site + directory,
+        os.environ["API_URL"] + directory,
         headers={
             "accept": "application/json",
             "Content-Type": "application/json",
@@ -52,7 +50,8 @@ def _setup_initial_state():
     first_message = (
         "How can I help you?"
         if st.session_state.is_logged
-        else "You have no token! Please obtain one by logging via Google (button on the left)."
+        else "You have no token! Please obtain one by logging via Google "
+        "(button on the left)."
     )
     if "messages" not in st.session_state.keys():
         st.session_state.messages = [
@@ -105,7 +104,8 @@ def _get_google_redirect_button():
     directory = "/login"
 
     response = requests.get(
-        site + directory, headers={"accept": "application/json"}
+        os.environ["API_URL"] + directory,
+        headers={"accept": "application/json"},
     )
 
     authorization_url = response.json()["url"]
@@ -158,7 +158,7 @@ def _get_token(code):
     directory = "/auth"
 
     response = requests.get(
-        site + directory + f"?code={code}",
+        os.environ["API_URL"] + directory + f"?code={code}",
         headers={
             "accept": "application/json",
         },
@@ -191,7 +191,7 @@ def _post_delete_history(id_: int, token):
 
     directory = f"/chatbot/message/{id_}/delete"
     _ = requests.delete(
-        site + directory,
+        os.environ["API_URL"] + directory,
         headers={
             "accept": "application/json",
             "Authorization": "Bearer " + token,
