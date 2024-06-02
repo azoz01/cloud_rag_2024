@@ -201,7 +201,10 @@ def _post_delete_history(id_: int, token):
 
 def _add_to_history(prompt: str, response: str, username: str):
 
-    id_ = min(list(history_containers.keys())) - 1
+    if len(history_containers) == 0:
+        id_ = -1
+    else:
+        id_ = min(list(history_containers.keys())) - 1
 
     with st.sidebar:
         new_container = st.container(border=True)
