@@ -56,7 +56,7 @@ module "rag_app" {
   source           = "./modules/run_app"
   application_name = "ragapp"
   location         = "us-central1"
-  docker_img       = "docker.io/azoz01/rag_app:0.0.10"
+  docker_img       = "docker.io/azoz01/rag_app:0.0.11"
   port             = 8001
   environment = {
     "API_URL" = module.rag_api.url
