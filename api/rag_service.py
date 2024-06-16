@@ -27,15 +27,14 @@ class RagService:
             model_name="text-bison@001",
             project=os.environ["PROJECT_ID"],
             temperature=0.0,
-            top_p=0,
-            top_k=1,
-            max_output_tokens=256,
+            # top_p=0.3,
+            max_output_tokens=512,
         )
         self.qa_chain = RetrievalQA.from_chain_type(
             llm=self.llm,
             chain_type="stuff",
             retriever=self.vector_store.as_retriever(
-                search_type="similarity", search_kwargs={"k": 4}
+                search_type="similarity", search_kwargs={"k": 5}
             ),
             return_source_documents=True,
             input_key="question",
@@ -44,8 +43,13 @@ class RagService:
     async def get_response(self, prompt):
         result = await self.qa_chain.ainvoke(
             {
-                "question": f"{prompt}. If this is not present in "
-                "documents, say 'I don't know'",
+                "question": f"""
+                    Answer this question provided documents.
+                    Do not refer to anything. Only plain informations.
+                    Use only information from documents. Don't include own information.
+                    If you don't have information in the texts, say 'I don't know'.
+                    The question: {prompt}? Explain it in details.
+                """,
                 "include_run_info": True,
             }
         )
